@@ -1,0 +1,5 @@
+{
+    "scripts": {
+        "test": "for i in test/*.test.mo ; do $(vessel bin)/moc $(vessel sources) -r $i ; done"
+    }
+}
