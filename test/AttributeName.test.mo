@@ -1,7 +1,5 @@
 import { describe; it; Suite } = "mo:testing/Suite";
 
-import Prim "mo:⛔";
-
 import Attribute "../src/Attribute"
 
 let suite = Suite();
