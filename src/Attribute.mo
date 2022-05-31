@@ -1,20 +1,21 @@
+import Type "Type";
 import Value "Value";
 
 module Attribute {
     public type Attribute = {
         name        : Text;
         description : ?Text;
-        typ         : Type;
+        typ         : Type.Type;
         multiValued : Bool;
     };
 
     public module Attribute {
         public func validate(attribute : Attribute, value : Value.Value) : Bool {
-            if (not attribute.multiValued) return validateSimple(attribute, value);
+            if (not attribute.multiValued) return Value.isType(value, attribute.typ);
             switch (value) {
                 case (#MultiValued(values)) {
                     for (value in values.vals()) {
-                        if (not validateSimple(attribute, value)) {
+                        if (not Value.isType(value, attribute.typ)) {
                             return false;
                         }
                     };
@@ -23,54 +24,6 @@ module Attribute {
                 case (_) false;
             };
         };
-
-        private func validateSimple(attribute : Attribute, value : Value.Value) : Bool {
-            switch (attribute.typ) {
-                case (#Text) switch (value) {
-                    case (#Text(_)) true;
-                    case (_) false;
-                };
-                case (#Bool) switch (value) {
-                    case (#Bool(_)) true;
-                    case (_) false;
-                };
-                case (#Float) switch (value) {
-                    case (#Float(_)) true;
-                    case (_) false;
-                };
-                case (#Nat) switch (value) {
-                    case (#Nat(_)) true;
-                    case (_) false;
-                };
-                case (#Int) switch (value) {
-                    case (#Int(_)) true;
-                    case (_) false;
-                };
-                case (#Blob) switch (value) {
-                    case (#Blob(_)) true;
-                    case (_) false;
-                };
-                case (#Principal) switch (value) {
-                    case (#Principal(_)) true;
-                    case (_) false;
-                };
-                case (#Complex) switch (value) {
-                    case (#Complex(_)) true;
-                    case (_) false;
-                };
-            }
-        };
-    };
-
-    public type Type = {
-        #Text;
-        #Bool;
-        #Float;
-        #Nat;
-        #Int;
-        #Blob;
-        #Principal;
-        #Complex;
     };
 
     // Attribute names are case insensitive and are often "camel-cased" (e.g., "camelCase").
