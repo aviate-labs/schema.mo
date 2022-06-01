@@ -15,7 +15,14 @@ suite.run([
                     ("lastName", #Text("Doe")),
                 ]))
             ];
-            Path.getPath(user, ("name", #Path("firstName", #Type(#Text)))) == #Text("John");
+            Path.get(user, ("name", #Path("firstName", #Type(#Text)))) == #Text("John");
+        }),
+        it("get path: mv", func () : Bool {
+            let user : Value.Complex = [
+                ("id", #Text("jd")),
+                ("emails", #MultiValued([#Text("john@example.com"), #Text("jd@example.com")]))
+            ];
+            Path.get(user, ("emails", #Index(1, #Type(#Text)))) == #Text("jd@example.com");
         }),
     ])
 ]);

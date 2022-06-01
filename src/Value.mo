@@ -50,6 +50,15 @@ module {
                 case (#Complex(_)) true;
                 case (_) false;
             };
+            case (#MultiValued(typ)) switch (value) {
+                case (#MultiValued(values)) {
+                    for (value in values.vals()) {
+                        if (not isType(value, typ)) return false;
+                    };
+                    true;
+                };
+                case (_) false;
+            };
         };
     };
 };

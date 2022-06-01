@@ -41,6 +41,19 @@ Schema.Schema.validate(userSchema, [
 ]); // true
 ```
 
+```motoko
+let user : Value.Complex = [
+    ("userName", #Text("jd")),
+    ("name", #Complex([
+        ("firstName", #Text("John")),
+        ("lastName", #Text("Doe")),
+    ]))
+];
+
+let firstName = Path.getPath(user, ("name", #Path("firstName", #Type(#Text))));
+// #Text("John")
+```
+
 ## Testing
 
 ```shell

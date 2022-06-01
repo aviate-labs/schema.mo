@@ -1,5 +1,5 @@
 module {
-    public type Type = {
+    public type SingularType = {
         #Text;
         #Bool;
         #Float;
@@ -8,5 +8,9 @@ module {
         #Blob;
         #Principal;
         #Complex;
+    };
+
+    public type Type = SingularType or {
+        #MultiValued : Type;
     };
 }

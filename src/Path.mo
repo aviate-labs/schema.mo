@@ -3,29 +3,36 @@ import Type "Type";
 import Value "Value";
 
 module {
-    // TODO: multi-valued values?
-
     public type Path = (Text, SubPath);
+
     public type SubPath = {
-        #Path : Path;
-        #Type : Type.Type;
+        #Index : (index : Nat, path : SubPath);
+        #Path  : Path;
+        #Type  : Type.SingularType;
     };
 
-    public func getPath(value : Value.Complex, (name, path) : Path) : Value.Value {
+    public func get(value : Value.Complex, (name, path) : Path) : Value.Value {
         for ((k, v) in value.vals()) {
-            if (k == name) return getSubPath(v, path);
+            if (k == name) return getSub(v, path);
         };
         #Null;
     };
 
-    private func getSubPath(value : Value.Value, path : SubPath) : Value.Value {
+    private func getSub(value : Value.Value, path : SubPath) : Value.Value {
         switch (path) {
-            case (#Type(typ)) {
-                if (Value.isType(value, typ)) return value;
+            case (#Index(index, path)) switch (value) {
+                case (#MultiValued(values)) {
+                    if (index >= values.size()) return #Null;
+                    return getSub(values[index], path);
+                };
+                case (_) {};
             };
             case (#Path(path)) switch (value) {
-                case (#Complex(value)) return getPath(value, path);
+                case (#Complex(value)) return get(value, path);
                 case (_) {};
+            };
+            case (#Type(typ)) {
+                if (Value.isType(value, typ)) return value;
             };
         };
         #Null;
