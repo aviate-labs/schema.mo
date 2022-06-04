@@ -1,3 +1,6 @@
+import Radix "mo:std/Tree/Radix";
+import Text "mo:std/Text";
+
 import Attribute "Attribute";
 import Type "Type";
 import Value "Value";
@@ -12,10 +15,10 @@ module {
     };
 
     public func get(value : Value.Complex, (name, path) : Path) : Value.Value {
-        for ((k, v) in value.vals()) {
-            if (k == name) return getSub(v, path);
+        switch (Radix.get(value, Text.toArray(name))) {
+            case (? value) getSub(value, path);
+            case (null)    #Null;
         };
-        #Null;
     };
 
     private func getSub(value : Value.Value, path : SubPath) : Value.Value {

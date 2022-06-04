@@ -2,15 +2,13 @@ import Type "Type";
 import Value "Value";
 
 module Attribute {
-    public type Attribute = {
-        name        : Text;
-        description : ?Text;
+    public type Data = {
         typ         : Type.Type;
         multiValued : Bool;
     };
 
-    public module Attribute {
-        public func validate(attribute : Attribute, value : Value.Value) : Bool {
+    public module Data {
+        public func validate(attribute : Attribute.Data, value : Value.Value) : Bool {
             if (not attribute.multiValued) return Value.isType(value, attribute.typ);
             switch (value) {
                 case (#MultiValued(values)) {
@@ -26,8 +24,12 @@ module Attribute {
         };
     };
 
+    public type Attribute = {
+        name : Text;
+    } and Data;
+
     // Attribute names are case insensitive and are often "camel-cased" (e.g., "camelCase").
-    public type Name = Text;
+    public type Name = [Char];
 
     public module Name {
         private func isAlpha(c : Char) : Bool {
@@ -45,7 +47,7 @@ module Attribute {
         public func valid(name : Name) : Bool {
             if (name.size() == 0) return false;
             var i = 0;
-            for (c in name.chars()) {
+            for (c in name.vals()) {
                 switch (i) {
                     case (0) {
                         if (not isAlpha(c)) return false;

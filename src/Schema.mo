@@ -1,66 +1,67 @@
+import Prim "mo:⛔";
+
+import Radix "mo:std/Tree/Radix";
+import Text "mo:std/Text";
+
 import Attribute "Attribute";
 import Value "Value";
 
 module {
     public type Schema = {
-        id          : Text;
-        name        : ?Text;
-        description : ?Text;
-        requiredAttributes : [Attribute.Attribute];
-        optionalAttributes : [Attribute.Attribute];
+        id       : Text;
+        required : Radix.Tree<Attribute.Data>;
+        optional : Radix.Tree<Attribute.Data>;
+    };
+
+    public func new(id : Text, required : [Attribute.Attribute], optional : [Attribute.Attribute]) : Schema {
+        let requiredTree = Radix.new<Attribute.Data>();
+        for (value in required.vals()) ignore Radix.insert<Attribute.Data>(requiredTree, Text.toArray(value.name), value);
+        let optionalTree = Radix.new<Attribute.Data>();
+        for (value in optional.vals()) ignore Radix.insert<Attribute.Data>(optionalTree, Text.toArray(value.name), value);
+        {
+            id;
+            required = requiredTree;
+            optional = optionalTree;
+        };
     };
 
     public module Schema {
         public func valid(schema : Schema) : Bool {
-            switch (schema.name) {
-                case (? name) if (not Attribute.Name.valid(name)) return false;
-                case (_) {};
-            };
-            for (attribute in schema.requiredAttributes.vals()) {
-                if (not Attribute.Name.valid(attribute.name)) return false;
-            };
-            for (attribute in schema.optionalAttributes.vals()) {
-                if (not Attribute.Name.valid(attribute.name)) return false;
-            };
-            true;
-        };
-
-        private func searchRequiredAttribute(value : Value.Complex, attributeName : Text) : ?Value.Value {
-            for ((name, value) in value.vals()) {
-                if (name == attributeName) return ?value;
-            };
-            null;
-        };
-
-        private func searchOptionalAttribute(schema : Schema, name : Text) : ?Attribute.Attribute {
-            for (attribute in schema.optionalAttributes.vals()) {
-                if (attribute.name == name) return ?attribute;
-            };
-            null;
+            var invalid = false;
+            Radix.walk(schema.required.root, func (name : [Char], _ : Attribute.Data) : Bool {
+                if (not Attribute.Name.valid(name)) invalid := true; // stop walk.
+                invalid;
+            });
+            if (invalid) return false;
+            Radix.walk(schema.optional.root, func (name : [Char], _ : Attribute.Data) : Bool {
+                if (not Attribute.Name.valid(name)) invalid := true; // stop walk.
+                invalid;
+            });
+            not invalid;
         };
 
         public func validate(schema : Schema, value : Value.Complex) : Bool {
-            for (attribute in schema.requiredAttributes.vals()) {
-                switch (searchRequiredAttribute(value, attribute.name)) {
-                    case (null) return false;
+            var invalid = false;
+            Radix.walk(schema.required.root, func (name : [Char], data : Attribute.Data) : Bool {
+                switch (Radix.get<Value.Value>(value, name)) {
+                    case (null) invalid := true;
                     case (? value) {
-                        if (not Attribute.Attribute.validate(attribute, value)) {
-                            return false;
-                        };
+                        if (not Attribute.Data.validate(data, value)) invalid := true;
                     };
                 };
-            };
-            for ((name, value) in value.vals()) {
-                switch (searchOptionalAttribute(schema, name)) {
-                    case (? attribute) {
-                        if (not Attribute.Attribute.validate(attribute, value)) {
-                            return false;
-                        };
-                    };
+                invalid;
+            });
+            if (invalid) return false;
+            Radix.walk(value.root, func (name : [Char], value : Value.Value) : Bool {
+                switch (Radix.get<Attribute.Data>(schema.optional, name)) {
                     case (null) {};
+                    case (? data) {
+                        if (not Attribute.Data.validate(data, value)) invalid := true;
+                    };
                 };
-            };
-            true;
+                invalid;
+            });
+            not invalid;
         };
     }
 };
